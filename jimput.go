@@ -20,7 +20,7 @@ func main() {
 		panic(err)
 	}
 	log.Printf("Input: %v", input)
-	tmpl, err := template.New("Test").Parse("My name is {{.name}}\n")
+	tmpl, err := template.New("Test").Parse("My name is {{.name}}\nContent: {{index .array 1}}\n")
 	if err != nil {
 		panic(err)
 	}
