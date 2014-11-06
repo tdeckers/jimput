@@ -1,13 +1,18 @@
 # Overview
 
-_jimput_ takes json as stdin and applies transformations to create (configuration) files.  It's created as a way to provide complex data input structures into a docker container, but other uses might exist.
-The concept is very similar to [confd](https://github.com/kelseyhightower/confd) but with json at the stdin instead of pulling data from a remote service.
+At times, there's a need to provide a docker container with input that can't be shared through the environment variables.  This is the case when the input is large or binary data. _jimput_ was trying to solve this in a complex way, leveraging code from [confd](https://github.com/kelseyhightower/confd).
 
-# Use
+As it turns out, this can be solved in a much simpler fashion by just piping tarred data into the containers stdin.
 
-_work in progress:_
-1. json in
-2. use go templates to parse input and write to files
-3. launch delegate application using exec
+* Create input
 
-_jimput_ will return non-zero if it encountered an issue parsing the input json or writing the output files.
+	mkdir tmp
+	echo "Some text" > tmp/datafile
+	tar -cf input.tar tmp/datafile
+
+* Pipe the input into the container
+
+	ID=$(cat input.tar | docker run -i -a stdin ubuntu /bin/bash -c "tar -x -C / && cat /tmp/datafile")
+	docker logs $ID
+
+This mechanism allows you to inject multiple data files, config files, etc.. into a container.  In a practical example, you'll want to replace the `cat /tmp/datafile` with the actual command you want your container to run.  Very likely you'll want to use `exec` to ensure the container properly responds to signals (e.g. to stop the container process)
